@@ -5,9 +5,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 # 1. Terminal Configuration
-st.set_page_config(page_title="UK Macro-Liquidity Terminal", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Macro-Liquidity Terminal", layout="wide", initial_sidebar_state="expanded")
 
-st.title("🇬🇧 UK Economic Inactivity: 5-Year Algorithmic Forecast")
+st.title("Economic Inactivity: 5-Year Algorithmic Forecast")
 st.markdown("""
 *Dynamic time-series projection modeling the Return on Investment (ROI) of workforce rehabilitation.*  
 **Created by:** Syamjith A A 
@@ -124,6 +124,6 @@ with tab2:
     st.download_button(
         label="📥 Download Forecast Model (CSV)",
         data=csv,
-        file_name='uk_gdp_forecast.csv',
+        file_name='gdp_forecast.csv',
         mime='text/csv',
     )
