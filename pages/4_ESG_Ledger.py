@@ -6,9 +6,9 @@ from sklearn.ensemble import IsolationForest
 import hashlib
 from datetime import datetime
 
-st.set_page_config(page_title="AUS AI Traceability Engine", layout="wide")
+st.set_page_config(page_title="AI Traceability Engine", layout="wide")
 
-st.title("🇦🇺 Algorithmic ESG Traceability & Greenwashing Detection")
+st.title("Algorithmic ESG Traceability & Greenwashing Detection")
 st.markdown("""
 *Enterprise pipeline utilizing Unsupervised Machine Learning (Isolation Forest) to detect supply chain data anomalies.* **Created By:** Syamjith A A 
 """)
