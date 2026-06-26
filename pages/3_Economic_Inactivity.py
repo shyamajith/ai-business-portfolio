@@ -1,5 +1,10 @@
+# --- REQUIRED IMPORTS (DO NOT DELETE) ---
+import streamlit as st
+import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
 import os
+# ----------------------------------------
 
 st.set_page_config(page_title="Macroeconomic Inactivity", layout="wide")
 
