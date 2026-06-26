@@ -1,47 +1,60 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
+import os
 
-# 1. Terminal Configuration
-st.set_page_config(page_title="Macro-Liquidity Terminal", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Macroeconomic Inactivity", layout="wide")
 
-st.title("Economic Inactivity: 5-Year Algorithmic Forecast")
-st.markdown("""
-*Dynamic time-series projection modeling the Return on Investment (ROI) of workforce rehabilitation.*  
-**Created by:** Syamjith A A 
-""")
+st.title("Global Workforce Inactivity Forecaster (v3.0)")
+st.caption("Cross-border econometric modeling simulating the ROI of governmental and corporate labor rehabilitation. Data fetched dynamically from macro-database.")
 st.divider()
 
-# 2. Advanced Interactive Sidebar (The Control Panel)
-st.sidebar.header("Forecast Parameters")
-st.sidebar.markdown("Adjust macroeconomic variables to stress-test the model.")
+# 1. Master Data Management: Dynamic CSV Fetch
+@st.cache_data
+def load_country_profiles():
+    # In enterprise software, you never hardcode data. 
+    # We fetch it dynamically from our local CSV database.
+    try:
+        df = pd.read_csv("global_macro_data.csv")
+        profiles = {}
+        for index, row in df.iterrows():
+            profiles[row['Country']] = {
+                "currency": row['Currency'],
+                "avg_gdp_per_worker": row['Avg_GDP_Per_Worker'],
+                "base_inactive": row['Total_Inactive']
+            }
+        return profiles
+    except FileNotFoundError:
+        # Emergency Fallback if the CSV is missing
+        st.error("Database connection lost. Loading UK Fallback data.")
+        return {"United Kingdom": {"currency": "£", "avg_gdp_per_worker": 75000, "base_inactive": 9400000}}
 
-reintegration_rate = st.sidebar.slider("Annual Reintegration Rate (%)", min_value=1.0, max_value=20.0, value=5.0, step=0.5)
-cost_per_worker = st.sidebar.number_input("Govt Intervention Cost per Worker (£)", min_value=1000, max_value=20000, value=5000, step=1000)
-wage_inflation = st.sidebar.slider("Estimated Wage Inflation (%)", min_value=1.0, max_value=8.0, value=3.5, step=0.1)
+profiles = load_country_profiles()
 
-# Base Data
-BASE_INACTIVE = 2400000  # Total UK inactive due to long-term sickness
-BASE_GDP_CONTRIBUTION = 70000
+# 2. Sidebar Intake
+st.sidebar.subheader("Jurisdiction Selection")
+selected_country = st.sidebar.selectbox("Target Economy", list(profiles.keys()))
 
-# 3. Time-Series Algorithmic Forecasting
+# Extract active profile data
+active_profile = profiles[selected_country]
+curr = active_profile["currency"]
+current_inactive = active_profile["base_inactive"]
+current_gdp_cont = active_profile["avg_gdp_per_worker"]
+
+st.sidebar.subheader("Intervention Parameters")
+reintegration_rate = st.sidebar.slider("Annual Reintegration Target (%)", 1.0, 20.0, 5.0, 0.5)
+cost_per_worker = st.sidebar.number_input(f"Intervention Cost per Worker ({curr})", 1000, 50000, 5000, 500)
+wage_inflation = st.sidebar.slider("Estimated Wage Inflation (%)", 1.0, 8.0, 3.5, 0.1)
+
+# 3. Algorithmic Time-Series Forecasting
 years = np.arange(2025, 2030)
 workers_returned_yearly = []
 gross_gdp_generated = []
 intervention_costs = []
 net_economic_benefit = []
 
-current_inactive = BASE_INACTIVE
-current_gdp_cont = BASE_GDP_CONTRIBUTION
-
 for year in years:
-    # Calculate workers returning this specific year
     returned_this_year = current_inactive * (reintegration_rate / 100)
     workers_returned_yearly.append(returned_this_year)
     
-    # Calculate financials
     gross_gdp = returned_this_year * current_gdp_cont
     cost = returned_this_year * cost_per_worker
     
@@ -49,81 +62,59 @@ for year in years:
     intervention_costs.append(cost)
     net_economic_benefit.append(gross_gdp - cost)
     
-    # Compound updates for next year
+    # Compound updates
     current_inactive -= returned_this_year
     current_gdp_cont *= (1 + (wage_inflation / 100))
 
-# Create Dynamic DataFrame
 df_forecast = pd.DataFrame({
     "Year": years,
     "Workers Reintegrated": workers_returned_yearly,
-    "Gross GDP (£ Billions)": [x / 1e9 for x in gross_gdp_generated],
-    "Intervention Cost (£ Billions)": [x / 1e9 for x in intervention_costs],
-    "Net Economic Benefit (£ Billions)": [x / 1e9 for x in net_economic_benefit]
+    "Gross GDP (Billions)": [x / 1e9 for x in gross_gdp_generated],
+    "Intervention Cost (Billions)": [x / 1e9 for x in intervention_costs],
+    "Net Economic Benefit (Billions)": [x / 1e9 for x in net_economic_benefit]
 })
 
 # 4. Executive KPI Dashboard
-total_net_benefit = df_forecast["Net Economic Benefit (£ Billions)"].sum()
+total_net_benefit = df_forecast["Net Economic Benefit (Billions)"].sum()
 total_workers = df_forecast["Workers Reintegrated"].sum()
-avg_roi = (total_net_benefit / df_forecast["Intervention Cost (£ Billions)"].sum()) * 100
+avg_roi = (total_net_benefit / df_forecast["Intervention Cost (Billions)"].sum()) * 100
 
+st.subheader(f"{selected_country} Economic Projections (2025-2029)")
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("5-Year Net GDP Boost", f"£{total_net_benefit:.2f}B")
+col1.metric("5-Year Net GDP Boost", f"{curr}{total_net_benefit:.2f}B")
 col2.metric("Total Workforce Recovered", f"{int(total_workers):,}")
 col3.metric("Avg ROI on Intervention", f"{avg_roi:.1f}%")
-col4.metric("Ending Inactive Pool", f"{int(current_inactive):,}")
+col4.metric("Remaining Inactive Pool", f"{int(current_inactive):,}")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# 5. Advanced Visualizations using Plotly
-tab1, tab2 = st.tabs(["📈 Financial Trajectory", "📊 Raw Data Export"])
+# 5. Data Visualization
+fig = go.Figure()
+fig.add_trace(go.Bar(
+    x=df_forecast["Year"], y=df_forecast["Intervention Cost (Billions)"],
+    name="Intervention Cost", marker_color='#ef4444'
+))
+fig.add_trace(go.Scatter(
+    x=df_forecast["Year"], y=df_forecast["Net Economic Benefit (Billions)"],
+    name="Net GDP Benefit", mode='lines+markers',
+    line=dict(color='#22c55e', width=4), marker=dict(size=8)
+))
 
-with tab1:
-    # Dual Axis Line/Bar Chart
-    fig = go.Figure()
-    
-    # Bar trace for Costs
-    fig.add_trace(go.Bar(
-        x=df_forecast["Year"], 
-        y=df_forecast["Intervention Cost (£ Billions)"],
-        name="Intervention Cost",
-        marker_color='#ef4444'
-    ))
-    
-    # Line trace for Net Benefit
-    fig.add_trace(go.Scatter(
-        x=df_forecast["Year"], 
-        y=df_forecast["Net Economic Benefit (£ Billions)"],
-        name="Net GDP Benefit",
-        mode='lines+markers',
-        line=dict(color='#22c55e', width=4),
-        marker=dict(size=8)
-    ))
+fig.update_layout(
+    title="Cost vs. Compound GDP Benefit Analysis",
+    xaxis_title="Forecast Year",
+    yaxis_title=f"Capital ({curr} Billions)",
+    template="plotly_dark", hovermode="x unified",
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+)
+st.plotly_chart(fig, use_container_width=True)
 
-    fig.update_layout(
-        title="Cost vs. GDP Benefit Analysis (2025-2029)",
-        xaxis_title="Forecast Year",
-        yaxis_title="Pounds (£ Billions)",
-        template="plotly_dark",
-        hovermode="x unified",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-with tab2:
-    st.write("Dynamic dataset generated based on current sidebar parameters.")
-    st.dataframe(df_forecast.style.format({
-        "Workers Reintegrated": "{:,.0f}",
-        "Gross GDP (£ Billions)": "£{:.2f}B",
-        "Intervention Cost (£ Billions)": "£{:.2f}B",
-        "Net Economic Benefit (£ Billions)": "£{:.2f}B"
-    }))
-    
-    # Allow admission officers to download the CSV
-    csv = df_forecast.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="📥 Download Forecast Model (CSV)",
-        data=csv,
-        file_name='gdp_forecast.csv',
-        mime='text/csv',
-    )
+# 6. Enterprise Export
+st.divider()
+csv_export = df_forecast.to_csv(index=False).encode('utf-8')
+st.download_button(
+    label="📥 Download Forecasting Model (CSV)",
+    data=csv_export,
+    file_name=f'{selected_country.lower().replace(" ", "_")}_inactivity_forecast.csv',
+    mime='text/csv',
+)
