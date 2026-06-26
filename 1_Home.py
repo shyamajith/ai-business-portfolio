@@ -34,7 +34,7 @@ with col1:
     
     st.markdown("""
     * **Module 1: Due Diligence Studio** - Automated preliminary M&A and supplier evaluation using NLP heuristics.
-    * **Module 2: UK Economic Inactivity Forecast** - Macroeconomic time-series modeling for workforce rehabilitation ROI.
+    * **Module 2: Economic Inactivity Forecast** - Macroeconomic time-series modeling for workforce rehabilitation ROI.
     * **Module 3: ESG Traceability Ledger** - Unsupervised machine learning (Isolation Forest) to detect supply chain greenwashing.
     """)
 
