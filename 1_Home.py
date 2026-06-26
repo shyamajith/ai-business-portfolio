@@ -1,7 +1,20 @@
 import streamlit as st
 
 st.set_page_config(page_title="Business Intelligence Portfolio", layout="wide")
-
+st.markdown(
+    """
+    <style>
+    /* Hide the default Streamlit sidebar title */
+    [data-testid="stSidebarNav"] {
+        padding-top: 0px; 
+    }
+    [data-testid="stSidebarNav"] > div:first-child {
+        display: none;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 st.title("AI Business Intelligence & Strategy Portfolio")
 st.markdown("### Bridging Artificial Intelligence with Global Market Dynamics")
 st.divider()
